@@ -29,12 +29,30 @@ export const updateReview = async (data: ReviewPayloadI): Promise<ReviewPayloadI
 export const getReviewsFx = createEffect<void, ReviewI[], Error>();
 getReviewsFx.use(getReviews);
 
-export const addReview = (reviews: ReviewI[], review: ReviewI): ReviewI[] => [
+export const addReview = (reviews: ReviewI[]): ReviewI[] => [
     ...reviews,
-    review
+    {
+        feadback: "pizdec",
+        name: "kosta",
+        statusPublished: "true",
+        createAt: "23-02-13",
+        idMongo: "13103-1254-124321"
+    }
 ];
 
+export const setStateHandler = (state: ReviewsStoreI, payload: Partial<ReviewsStoreI>): ReviewsStoreI => {
+    for (const key in payload) {
+        if (Object.hasOwnProperty.call(payload, key) && Object.hasOwnProperty.call(state, key)) {
+            return {
+                ...state,
+                ...payload
+            }
+        }
+    }
+}
+
 export const setState = createEvent<Partial<ReviewsStoreI>>();
+export const add = createEvent<ReviewI>();
 
 export const $reviews = createStore<ReviewsStoreI>({
     reviews: [],
@@ -58,10 +76,8 @@ export const $reviewsGetStatus = combine({
 $reviews
     .on(getReviewsFx, (state => ({ ...state, isLoading: true })))
     .on(getReviewsFx.doneData, (state, data) => ({ ...state, reviews: data }))
-    .on(setState, ((state, payload) => {
-        for (const key in payload) {
-            if (Object.hasOwnProperty.call(payload, key) && Object.hasOwnProperty.call(state, key)) {
-                state[key] = payload[key];
-            }
-        }
+    .on(setState, ((state, payload) => setStateHandler(state, payload)))
+    .on(add, (state) => ({
+        ...state,
+        reviews: addReview(state.reviews)
     }))
