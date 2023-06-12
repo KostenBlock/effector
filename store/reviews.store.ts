@@ -75,7 +75,7 @@ export const $reviewsGetStatus = combine({
 
 $reviews
     .on(getReviewsFx, (state => ({ ...state, isLoading: true })))
-    .on(getReviewsFx.doneData, (state, data) => ({ ...state, reviews: data }))
+    .on(getReviewsFx.doneData, (state, data) => setStateHandler(state, { reviews: data }))
     .on(setState, ((state, payload) => setStateHandler(state, payload)))
     .on(add, (state) => ({
         ...state,
