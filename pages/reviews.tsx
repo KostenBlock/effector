@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { useEvent, useStore } from "effector-react";
-import { $reviews, getReviewsFx } from "~/store/reviews.store";
+import { $reviews, $reviewsGetStatus, getReviewsFx, reset } from "~/store/reviews.store";
 
 import Link from "next/link";
 
 export default function Reviews() {
     const fetchEventReviews = useEvent(getReviewsFx);
-    const { reviews } = useStore($reviews);
+    const { reviews, isLoading } = useStore($reviews);
 
     useEffect(() => {
         (async () => {
-            await getReviewsFx();
+            await fetchEventReviews();
         })();
     }, []);
 
@@ -19,6 +19,11 @@ export default function Reviews() {
             <Link href={"/"}>
                 To gome
             </Link>
+            <button
+                onClick={() => reset()}
+            >
+                Сбросить
+            </button>
             <ul>
                 {reviews.map((review, index) => {
                     return (
