@@ -1,22 +1,30 @@
 import axios from "axios";
-import { combine, createEffect, createEvent, createStore, restore } from "effector";
+import {combine, createEffect, createEvent, createStore, restore, split} from "effector";
 
 import { ReviewI, ReviewPayloadI } from "~/types/reviews";
 
 interface ReviewsStoreI {
     reviews: ReviewI[];
+    reviewsSer: ReviewI[];
     isLoading: boolean;
     isError: boolean;
     [propName: string]: any;
 }
 
-export const getReviews = async () => {
-    const { data: { feedbacks } } = await axios.post('https://service.1dogma.ru/admin/feadback/filter', {
-        createAt: new Date().toISOString().split('T')[0].split('-').reverse().join("/"),
-        statusPublished: "true",
-        ofset: 0,
-        limit: 12
+export const getReviews = async (name: string) => {
+    const response = await fetch('https://service.1dogma.ru/admin/feadback/filter', {
+        method: 'POST',
+        body: JSON.stringify({
+            createAt: new Date().toISOString().split('T')[0].split('-').reverse().join("/"),
+            statusPublished: "true",
+            ofset: 0,
+            limit: 12
+        }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
     });
+    const { feedbacks }: { feedbacks: ReviewI[] } = await response.json();
     return feedbacks;
 };
 
@@ -26,7 +34,7 @@ export const updateReview = async (data: ReviewPayloadI): Promise<ReviewPayloadI
     return data;
 };
 
-export const getReviewsFx = createEffect<void, ReviewI[], Error>();
+export const getReviewsFx = createEffect<string, ReviewI[], Error>();
 getReviewsFx.use(getReviews);
 
 export const addReview = (reviews: ReviewI[]): ReviewI[] => [
@@ -40,7 +48,7 @@ export const addReview = (reviews: ReviewI[]): ReviewI[] => [
     }
 ];
 
-export const setStateHandler = (state: ReviewsStoreI, payload: Partial<ReviewsStoreI>): ReviewsStoreI => {
+export const setStateHandler = (state: ReviewsStoreI, payload: Partial<ReviewsStoreI>) => {
     for (const key in payload) {
         if (Object.hasOwnProperty.call(payload, key) && Object.hasOwnProperty.call(state, key)) {
             return {
@@ -56,16 +64,18 @@ export const add = createEvent<ReviewI>();
 
 export const $reviews = createStore<ReviewsStoreI>({
     reviews: [],
+    reviewsSer: [],
     isLoading: false,
     isError: false
 });
 
-const serializeReviews = (state: ReviewsStoreI) =>
-    state.reviews.map((review) => review.statusPublished = "hahaha");
+const serializeReviews = (state: ReviewsStoreI) =>{
+    return state.reviewsSer = state.reviews.map((review) => ({ ...review, statusPublished: 'Huita' }));
+}
 
 export const $reviewsWithStatus = $reviews.map(serializeReviews);
 
-export const $fetchError = restore<Error | null>(getReviewsFx.failData, null);
+export const $fetchError = restore<Error>(getReviewsFx.failData, null);
 
 export const $reviewsGetStatus = combine({
     loading: getReviewsFx?.pending,

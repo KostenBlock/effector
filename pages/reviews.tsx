@@ -4,13 +4,18 @@ import { $reviews, getReviewsFx } from "~/store/reviews.store";
 
 import Link from "next/link";
 
-export default function Reviews() {
-    const fetchEventReviews = useEvent(getReviewsFx);
-    const { reviews } = useStore($reviews);
+import { GetStaticProps } from "next";
+
+interface Props {
+    data: any
+}
+
+export default function Reviews({ data }: Props) {
+    const { reviews, reviewsSer } = useStore($reviews);
 
     useEffect(() => {
         (async () => {
-            await getReviewsFx();
+            await getReviewsFx('kak_tak');
         })();
     }, []);
 
@@ -30,4 +35,22 @@ export default function Reviews() {
             </ul>
         </div>
     )
+}
+
+export const getStaticProps: GetStaticProps = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DIRECTUS}/items/dp_header`, {
+        method: 'GET',
+        headers: {
+            authorization: `Bearer ${process.env.NEXT_PUBLIC_DIRECTUS_STATIC_TOKEN}`
+        },
+    });
+
+    const { data } = await response.json();
+
+    return {
+        props: {
+            data
+        },
+        revalidate: 20
+    }
 }
