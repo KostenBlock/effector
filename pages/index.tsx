@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import { createEffect, createStore } from 'effector'
 import { useEvent, useStore } from 'effector-react'
-import {$reviews} from "~/store/reviews.store";
+import { $reviews } from "~/store/reviews.store";
 
 const fetchDirectusDataFx = createEffect(async (name: string) => {
     const result = await fetch(`https://tools.1dogma.ru/items/${name}`, {
@@ -36,7 +36,6 @@ export default function Sample() {
     const { reviews } = useStore($reviews)
     const fetchEvent = useEvent(fetchDirectusDataFx);
     const { push } = useRouter();
-    console.log(reviews)
 
     const loading = useStore(fetchDirectusDataFx.pending)
 

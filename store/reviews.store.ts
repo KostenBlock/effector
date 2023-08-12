@@ -37,6 +37,10 @@ export const updateReview = async (data: ReviewPayloadI): Promise<ReviewPayloadI
 export const getReviewsFx = createEffect<string, ReviewI[], Error>();
 getReviewsFx.use(getReviews);
 
+getReviewsFx.doneData.watch((data) => {
+    // console.log(data)
+})
+
 export const addReview = (reviews: ReviewI[]): ReviewI[] => [
     ...reviews,
     {
@@ -61,6 +65,7 @@ export const setStateHandler = (state: ReviewsStoreI, payload: Partial<ReviewsSt
 
 export const setState = createEvent<Partial<ReviewsStoreI>>();
 export const add = createEvent<ReviewI>();
+export const reset = createEvent();
 
 export const $reviews = createStore<ReviewsStoreI>({
     reviews: [],
@@ -78,16 +83,14 @@ export const $reviewsWithStatus = $reviews.map(serializeReviews);
 export const $fetchError = restore<Error>(getReviewsFx.failData, null);
 
 export const $reviewsGetStatus = combine({
-    loading: getReviewsFx?.pending,
+    loading: getReviewsFx.pending,
     error: $fetchError,
-    data: $reviews,
+    data: $reviews
 });
 
 $reviews
-    .on(getReviewsFx, (state => ({ ...state, isLoading: true })))
-    .on(getReviewsFx.doneData, (state, data) => setStateHandler(state, { reviews: data }))
+    .on(getReviewsFx, (state) => setStateHandler(state, { isLoading: true }))
+    .on(getReviewsFx.doneData, (state, data) => setStateHandler(state, { reviews: data, isLoading: false }))
+    .on(getReviewsFx.fail, (state, data) => setStateHandler(state, { isLoading: false }))
     .on(setState, ((state, payload) => setStateHandler(state, payload)))
-    .on(add, (state) => ({
-        ...state,
-        reviews: addReview(state.reviews)
-    }))
+    .reset(reset);
